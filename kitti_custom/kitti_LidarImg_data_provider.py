@@ -33,7 +33,7 @@ import ipdb as pdb
 def ros_pub(points,topic,color):
     pcl_pub = rospy.Publisher("/all_points", PointCloud2, queue_size=10)
     points = points.cpu().detach().numpy()
-    cloud_msg = xyzrgb_array_to_pointcloud2(points,color,stamp =rospy.Time.now(), frame_id = "map" )
+    cloud_msg = xyzrgb_array_to_pointcloud2(points,color,stamp =rospy.Time.now(), frame_id = "zoe/base_link" )
     rospy.loginfo("happily publishing sample pointcloud.. !")
     pcl_pub.publish(cloud_msg)
     rospy.sleep(0.1)
@@ -45,7 +45,7 @@ def ros_pub_marker(loc):
     # print(loc[3])
     quat = quaternion_from_euler(0, 0, loc[3])
     marker = Marker()
-    marker.header.frame_id = "map"
+    marker.header.frame_id = "zoe/base_link"
     marker.type = marker.CUBE
     marker.action = marker.ADD
     marker.scale.x = 2.5
@@ -73,52 +73,69 @@ def ros_pub_marker(loc):
 
 
 
-class kitti_custom_dataset(Dataset):
-    def __init__(self, data_dir, num_points=2048, mode='train'):
-        self.data = []
-        self.labels = []
-        self.img_data = []
-        files = os.listdir(data_dir + "velodyne_crop/")
-        for crop_num in range(0, len(files)):
-            crop_path = data_dir + "velodyne_crop/"+ "%06d.npy" % crop_num
-            point_set = np.load(crop_path) #(N,3)
-            self.data.append(point_set)
+class kitti_custom(Dataset):
+    def __init__(self, data_dir, train = True):
+        self.train = train
 
-            labels_path = data_dir + "labels/" + "%06d.txt" % crop_num
-            pose = np.loadtxt(labels_path, delimiter=' ',ndmin=2) #(3,4)
-            self.labels.append(pose)
+        if self.train:
+            self.train_data = []
+            self.train_labels = []
+            self.train_img_data = []
+            print('loading training data ')
+            files = os.listdir(data_dir +"training/" +"velodyne_crop/")
+            for crop_num in range(0, len(files)):
+                crop_path = data_dir +"training/"+ "velodyne_crop/"+ "%06d.npy" % crop_num
+                point_set = np.load(crop_path) #(N,3)
+                self.train_data.append(point_set)
 
-            img_path = data_dir + "img_crop/" + "%06d.png" % crop_num
-            img = cv2.imread(img_path,0)
-            self.img_data.append(img)
+                labels_path = data_dir +"training/"+ "labels/" + "%06d.txt" % crop_num
+                pose = np.loadtxt(labels_path, delimiter=' ',ndmin=2) #(3,4)
+                self.train_labels.append(pose)
+
+                # img_path = data_dir + "training/" + "img_crop/" + "%06d.png" % crop_num
+                img_path = data_dir + "training/" + "heightmap_crop/" + "%06d.png" % crop_num
+                img = cv2.imread(img_path,0)
+                self.train_img_data.append(img)
+        else:
+            self.valid_data = []
+            self.valid_labels = []
+            self.valid_img_data = []
+            print('loading validation data ')
+            files = os.listdir(data_dir +"validation/" + "velodyne_crop/")
+            for crop_num in range(0, len(files)):
+                crop_path = data_dir +"validation/" + "velodyne_crop/"+ "%06d.npy" % crop_num
+                point_set = np.load(crop_path) #(N,3)
+                self.valid_data.append(point_set)
+
+                labels_path = data_dir +"validation/" + "labels/" + "%06d.txt" % crop_num
+                pose = np.loadtxt(labels_path, delimiter=' ',ndmin=2) #(3,4)
+                self.valid_labels.append(pose)
+
+                # img_path = data_dir +"validation/" + "img_crop/" + "%06d.png" % crop_num
+                img_path = data_dir +"validation/" + "heightmap_crop/" + "%06d.png" % crop_num
+                img = cv2.imread(img_path,0)
+                self.valid_img_data.append(img)
+
 
     def __getitem__(self, index):
-        return self.data[index], self.img_data[index], self.labels[index]
+        if self.train:
+            return self.train_data[index], self.train_img_data[index], self.train_labels[index]
+        else:
+            return self.valid_data[index], self.valid_img_data[index], self.valid_labels[index]
 
 
     def __len__(self):
-        # print(len(self.data))
-        return len(self.data)
+        if self.train:
+            return len(self.train_data)
+        else:
+            return len(self.valid_data)
 
 
 
 
 
 
-
-
-
-
-def get_data_loaders(data_dir):
-
-    datasets = kitti_custom_dataset(data_dir)
-    data_len = len(datasets)
-    print("Total Data size ", data_len)
-    indices = list(range(data_len))
-
-    shuffle = True
-    random_seed = 20
-    batch_size = 32
+def get_data_loaders(data_dir, batch = 32):
 
     use_cuda = torch.cuda.is_available()
     if use_cuda:
@@ -130,35 +147,16 @@ def get_data_loaders(data_dir):
         pin_memory = True
 
 
+    train_loader = DataLoader(kitti_custom(data_dir,train = True),
+                    batch_size= batch, num_workers=num_workers, pin_memory=pin_memory,shuffle=True,drop_last=True)
 
+    valid_loader = DataLoader(kitti_custom(data_dir,train = False),
+                    batch_size= batch, num_workers=num_workers, pin_memory=pin_memory,shuffle=True,drop_last=True)
 
-    # split the main dataset into three parts test(20%), valid(20%) and train (70%)
-    split_train = int(np.floor(0.7 * data_len))
-
-    if shuffle:
-        np.random.seed(random_seed)
-        np.random.shuffle(indices)
-
-    train_idx = indices[:split_train]
-    valid_idx = indices[split_train:]
-
-    print("Train Data size ",len(train_idx))
-    print("Valid Data size ",len(valid_idx))
-
-
-    train_sampler = SubsetRandomSampler(train_idx)
-    valid_sampler = SubsetRandomSampler(valid_idx)
-
-
-    train_loader = DataLoader( datasets, batch_size= batch_size, sampler=train_sampler, # BS = 105
-        num_workers=num_workers, pin_memory=pin_memory,drop_last=True)
-    valid_loader = DataLoader( datasets, batch_size= batch_size, sampler=valid_sampler,
-        num_workers=num_workers, pin_memory=pin_memory, drop_last=True)
-
+    print("Train Data size ",len(train_loader)*batch)
+    print("Valid Data size ",len(valid_loader)*batch)
 
     return train_loader, valid_loader
-
-
 
 
 
@@ -168,7 +166,7 @@ def get_data_loaders(data_dir):
 if __name__ == '__main__':
     rospy.init_node('pcl2_pub_example', anonymous=True)
 
-    data_dir = "/home/anshul/iros_2019/attentional_pointnet/my_dataset/lidar_img/"
+    data_dir = "/home/anshul/iros_2019/attentional_pointnet/my_dataset/lidar_heightmap_v2/"
 
     train_loader, valid_loader =  get_data_loaders(data_dir)
     for batch_idx, (data, img_data, labels) in enumerate(train_loader):
@@ -203,8 +201,8 @@ if __name__ == '__main__':
             #     pdb.set_trace()
 
             pdb.set_trace()
-            ros_pub(data_trans[i], "/all_points", color)
-            pdb.set_trace()
+            # ros_pub(data_trans[i], "/all_points", color)
+            # pdb.set_trace()
 
 
 
