@@ -1,17 +1,14 @@
 ## Attentional PointNet for 3D-Object Detection in Point Clouds
----
 Authors: Anshul Paigwar, Ozgur Erkent, Christian Wolf, Christian Laugier
 
-Teaser Img
+<img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/teaser_final.png" alt="drawing" width="400"/>
 
 ## Introduction
----
 This repository is code release for our CVPR 2019 workshop paper accepted in [Workshop on Autonomous Driving](https://sites.google.com/view/wad2019/overview).
 In this work, we study 3D object detection directly from point clouds obtained
 from 3D LiDARS.
 
 ## Abstract
----
 Accurate detection of objects in 3D point clouds is a central
 problem for autonomous navigation. Most existing methods use techniques of hand-crafted
 features representation or multi-sensor approaches prone to sensor failure.
@@ -49,14 +46,14 @@ ROS
 PCL
 ```
 ## Data Preparation
----
 * We train the model on agumented KITTI 3D object detection dataset.
 * We subdivide the FOV area from each scan into equally
 spaced cropped regions of 12m×12m with an overlap of 1m.
 * Each cropped region of size 12m×12m is also converted into
 a grayscale image of size 120×120 pixels encoding height.
 
-Data augumentation Img
+<img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/data_agumentation.png" alt="drawing" width="300"/>
+
 
 Download the KITTI 3D object detection dataset from [link](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d).
   Your data directory should look like:
@@ -102,7 +99,6 @@ Bool category car/ non-car
 For non-car category we keep a fixed x,y,z which is outside of 12m x 12m region.
 
 ## Usage
----
 
 To train the model update the path to data directory in your system and run:
 ```
@@ -115,16 +111,20 @@ It take arround 8 hours for the network to converge and model parameters would b
 python kitti_evaluation.py
 ```
 ## Results
----
+
 Attentional PointNet achieves arround 55.6 % of overall Average Precision for car detection
  combined for all levels of difficulties. Some of the results are shown below:
 
 Sequential detection:
 
+<img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/sequence_detection.png" alt="drawing" width="700"/>
+
 Detection on Kitti Dataset:
 
+<img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/kitti_detections_final.png" alt="drawing" width="700"/>
+
 ## References
----
+
 [1] Charles R Qi, Hao Su, Kaichun Mo, and Leonidas J Guibas. Pointnet: Deep learning on
 point sets for 3d classification and segmentation. Proc. Computer Vision and Pattern
 Recognition (CVPR), IEEE, 2017.
