@@ -4,15 +4,14 @@ Authors: Anshul Paigwar, Ozgur Erkent, Christian Wolf, Christian Laugier
 <img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/teaser_final.png" alt="drawing" width="400"/>
 
 ## Introduction
-This repository is code release for our CVPR 2019 workshop paper accepted in [Workshop on Autonomous Driving](https://sites.google.com/view/wad2019/overview).
+This repository is a code release for our CVPR 2019 workshop paper accepted in [Workshop on Autonomous Driving](https://sites.google.com/view/wad2019/overview).
 In this work, we study 3D object detection directly from point clouds obtained
 from 3D LiDARS.
 
 ## Abstract
 Accurate detection of objects in 3D point clouds is a central
-problem for autonomous navigation. Most existing methods use techniques of hand-crafted
-features representation or multi-sensor approaches prone to sensor failure.
-Approaches like PointNet that directly operate on sparse point
+problem for autonomous navigation. Most existing methods use techniques of hand-crafted features representation or multi-sensor approach prone to sensor failure.
+Approaches like PointNet that directly operate on a sparse point
 data have shown good accuracy in the classification of single 3D objects.
 However, LiDAR sensors on Autonomous Vehicles generate a large scale point cloud.
 Real-time object detection in such a cluttered environment still remains
@@ -27,7 +26,7 @@ the number of points to be processed and inference time.
 Evaluation on KITTI car detection benchmark shows that our Attentional PointNet achieves comparable results with the state-of-the-art LiDAR-based 3D detection methods in detection and speed.
 
 ## Installation
----
+
 We have tested the algorithm on the system with Ubuntu 16.04, 8 GB RAM
 and NVIDIA GTX-1080.
 ### Dependencies
@@ -39,14 +38,14 @@ scipy
 shapely
 ```
 ### Visualization
-For visualisation of the output bounding boxes and easy integration
-with our real system we use Robot Operating System (ROS):
+For visualization of the output bounding boxes and easy integration
+with our real system we use the Robot Operating System (ROS):
 ```
 ROS
 PCL
 ```
 ## Data Preparation
-* We train the model on agumented KITTI 3D object detection dataset.
+* We train the model on augmented KITTI 3D object detection dataset.
 * We subdivide the FOV area from each scan into equally
 spaced cropped regions of 12m×12m with an overlap of 1m.
 * Each cropped region of size 12m×12m is also converted into
@@ -64,13 +63,13 @@ Download the KITTI 3D object detection dataset from [link](http://www.cvlibs.net
         |--label_2
         |--velodyne
 ```
-To generate the augumented dataset for the training and validation of Attentional PointNet
+To generate the augmented dataset for the training and validation of Attentional PointNet
  use the code in folder kitti_custom:
 
  ```
  python kitti_lidarImg_data_generator.py
  ```
-It will generate the dataset in following format:
+It will generate the dataset in the following format:
 ```
 |--attentional_pointnet_data
     |--validation
@@ -87,7 +86,7 @@ It will generate the dataset in following format:
 ```
 Form each cropped region of 12m x 12m we have point cloud data, heightmap and a label file.
  Each label file contains three instances. These instances could be a car or non-car.
- depending upon number of cars in the scene. Instances are defined as
+ depending upon the number of cars in the scene. Instances are defined as
 
 ```
 Float x,y,z
@@ -96,15 +95,15 @@ Int theta_binned
 Float H, W, L
 Bool category car/ non-car
 ```
-For non-car category we keep a fixed x,y,z which is outside of 12m x 12m region.
+For non-car category, we keep a fixed x,y,z which is outside of 12m x 12m region.
 
 ## Usage
 
-To train the model update the path to data directory in your system and run:
+To train the model update the path to the data directory in your system and run:
 ```
 python main.py -s
 ```
-It take arround 8 hours for the network to converge and model parameters would be stored
+It takes around 8 hours for the network to converge and model parameters would be stored
  in model_checkpoint.pth.tar file. You can then use these model parameters for final
  evaluation on KITTI dataset:
 ```
