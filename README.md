@@ -4,7 +4,7 @@ Authors: Anshul Paigwar, Ozgur Erkent, Christian Wolf, Christian Laugier
 <img src="https://github.com/anshulpaigwar/Attentional-PointNet/blob/master/doc/teaser_final.png" alt="drawing" width="400"/>
 
 ## Introduction
-This repository is a code release for our CVPR 2019 workshop paper accepted in [Workshop on Autonomous Driving](https://sites.google.com/view/wad2019/overview).
+This repository is a code release for our CVPR 2019 workshop [paper](https://hal.inria.fr/hal-02156555) accepted in [Workshop on Autonomous Driving](https://sites.google.com/view/wad2019/overview).
 In this work, we study 3D object detection directly from point clouds obtained
 from 3D LiDARS.
 
